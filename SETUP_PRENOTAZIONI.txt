@@ -1,0 +1,110 @@
+SETUP PRENOTAZIONI — Marquito Barbiere
+========================================
+
+Questo file spiega come collegare il sito (index.html) al vero Google
+Calendar di Marco, in modo che le prenotazioni diventino reali.
+
+Finché non fai questi passaggi, il sito resta in modalità DEMO (funziona,
+ma mostra orari finti e non scrive davvero sul calendario).
+
+
+PASSO 1 — Trova l'ID del calendario di Marco
+---------------------------------------------
+1. Marco apre https://calendar.google.com con l'account Google che vuole
+   usare per gli appuntamenti del negozio.
+2. A sinistra, sotto "I miei calendari", passa il mouse sul calendario da
+   usare (di solito quello con il suo nome) > icona dei tre puntini >
+   "Impostazioni e condivisione".
+3. Scorri fino a "Integra calendario" > copia il valore "ID calendario"
+   (di solito è il suo indirizzo email Gmail, o una stringa tipo
+   xxxxxxxx@group.calendar.google.com se è un calendario secondario).
+
+
+PASSO 2 — Crea il progetto Google Apps Script
+-----------------------------------------------
+1. Vai su https://script.google.com (con lo stesso account Google del
+   calendario) > "Nuovo progetto".
+2. Cancella il contenuto di default e incolla dentro il contenuto del
+   file `google-calendar-booking.gs` di questa cartella.
+3. Rinomina il progetto, es. "Marquito Barbiere - Prenotazioni".
+4. In alto a sinistra clicca sull'icona ingranaggio "Impostazioni progetto"
+   e assicurati che il fuso orario sia Europe/Rome (o incolla anche
+   `appsscript.json` da questa cartella tramite l'editor, se hai
+   abilitato "Mostra file manifest appsscript.json" nelle impostazioni).
+
+
+PASSO 3 — Configura CONFIG dentro google-calendar-booking.gs
+----------------------------------------------------------------
+Dentro l'editor di Apps Script, in cima al file, modifica:
+
+- CALENDAR_ID
+  Incolla l'ID calendario copiato al Passo 1, al posto di
+  'INSERISCI_QUI_ID_CALENDARIO_DI_MARCO'.
+
+- OPENING_HOURS
+  Già impostati sugli orari reali forniti dal cliente: 08:30-13:00 e
+  15:30-20:00, tutti i giorni. Se in realtà c'è un giorno di chiuso fisso
+  (es. lunedì) non ancora comunicato, aggiornalo prima di andare online:
+  le istruzioni per personalizzare giorno per giorno sono nei commenti
+  del file.
+
+  Nota: i giorni di ferie/festività non vanno inseriti qui. Basta che
+  Marco crei un evento "tutto il giorno" sul suo calendario per quella
+  data: il sito non mostrerà più orari disponibili per quel giorno,
+  automaticamente.
+
+- MIN_LEAD_MINUTES (default 60)
+  Quanti minuti di anticipo minimo servono per prenotare (per evitare che
+  un cliente prenoti tra 2 minuti). Modificalo se Marco vuole un valore
+  diverso.
+
+
+PASSO 4 — Pubblica come Web App
+----------------------------------
+1. In alto a destra, "Esegui il deployment" (Deploy) > "Nuovo deployment".
+2. Icona a ingranaggio accanto a "Seleziona tipo" > "Applicazione web".
+3. Configura:
+   - Descrizione: "Prenotazioni Marquito Barbiere"
+   - Esegui come: "Io" (il tuo account, quello del calendario)
+   - Chi ha accesso: "Chiunque"
+4. Clicca "Esegui il deployment".
+5. Google chiederà di autorizzare l'accesso al Calendar: segui il flusso
+   (potrebbe comparire un avviso "app non verificata da Google" — è
+   normale per script personali: clicca "Avanzate" > "Vai al progetto
+   (non sicuro)" per continuare, è il tuo stesso script).
+6. Copia l'URL dell'applicazione web che ti viene mostrato: finisce con
+   "/exec".
+
+
+PASSO 5 — Collega l'URL dentro index.html
+--------------------------------------------
+1. Apri index.html.
+2. Cerca la riga:
+       const BOOKING_API_URL = "DEMO";
+3. Sostituisci "DEMO" con l'URL copiato al Passo 4, tra virgolette:
+       const BOOKING_API_URL = "https://script.google.com/macros/s/XXXX/exec";
+4. Salva e ripubblica il sito.
+
+
+PASSO 6 — Test prima di andare live
+--------------------------------------
+1. Apri il sito, vai su "Prenota", scegli un servizio, un giorno e un
+   orario, e conferma con un nome/telefono di prova.
+2. Controlla che l'evento compaia sul Google Calendar di Marco con orario
+   e durata corretti.
+3. Ricarica la pagina, riprova a prenotare lo stesso orario: deve
+   sparire dagli orari disponibili (perché ora è occupato).
+4. Cancella l'evento di prova dal calendario dopo il test.
+
+Se qualcosa non torna, il messaggio di errore mostrato nel form del sito
+di solito indica il problema (es. "Calendario non trovato" = CALENDAR_ID
+sbagliato).
+
+
+OGNI VOLTA CHE MODIFICHI google-calendar-booking.gs
+------------------------------------------------------
+Le modifiche fatte nell'editor di Apps Script non si applicano da sole:
+dopo ogni modifica bisogna rifare "Esegui il deployment" >
+"Gestisci deployment" > icona matita sul deployment esistente > "Nuova
+versione" > "Esegui il deployment". Così l'URL resta lo stesso e non
+serve toccare index.html di nuovo.
